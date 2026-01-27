@@ -9,11 +9,11 @@ const getAllUsers = async (_, res) =>
 const signUpUser = async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    const [isUserAlreadyPresent] = await db
+    const [existingUser] = await db
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, email));
-    if (isUserAlreadyPresent) {
+    if (existingUser) {
       return res.status(400).send("User with this email already present.");
     }
 
@@ -34,24 +34,27 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [isUserAlreadyPresent] = await db
+    const [existingUser] = await db
       .select()
       .from(usersTable)
-      .where(eq(email, usersTable.email ));
-    if (!isUserAlreadyPresent?.email) {
+      .where(eq(email, usersTable.email));
+    if (!existingUser?.email || !existingUser?.salt) {
       return res.status(400).send("User not found. Please sign up.");
     }
 
-    const { _salt, hashedKeys } = getSaltAndHashFromString(password);
+    const { _salt, hashedKeys } = getSaltAndHashFromString(
+      existingUser?.salt,
+      password,
+    );
 
-    if (password === hashedKeys) {
-      return res.status(200).send("Signed in successfully");
+    if (existingUser?.password !== hashedKeys) {
+      return res.status(400).send("Wrong username or password.");
     }
+    return res.status(200).send("Signed in successfully");
   } catch (err) {
     console.error(`🔴🔴🔴 LOG - : ERROR`, err);
     return res.status(400).send("SERVER ERROR: ", err);
   }
-  res.send("LOGGED IN");
 };
 
 module.exports = { getAllUsers, signUpUser, loginUser };
