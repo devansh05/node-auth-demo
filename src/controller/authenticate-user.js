@@ -1,10 +1,57 @@
-const signUpUser = (req, res) => {
-  console.log(`🟡 LOG - : SIGN UP`);
-  res.send("SIGN UP");
+const db = require("../db");
+const { usersTable } = require("../db/schema");
+const { eq } = require("drizzle-orm");
+const { getSaltAndHashFromString } = require("../utilities/utilities");
+
+const getAllUsers = async (_, res) =>
+  res.send(await db.select().from(usersTable));
+
+const signUpUser = async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const [isUserAlreadyPresent] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email));
+    if (isUserAlreadyPresent) {
+      return res.status(400).send("User with this email already present.");
+    }
+
+    const { salt, hashedKeys } = getSaltAndHashFromString(password);
+
+    const [userAdded] = await db
+      .insert(usersTable)
+      .values({ name, email, password: hashedKeys, salt })
+      .returning({ id: usersTable.id });
+
+    return res.send(`Signed up user successfully. ${userAdded.id}`);
+  } catch (err) {
+    console.error(`🔴🔴🔴 LOG - : ERROR`, err);
+    return res.status(400).send("SERVER ERROR: ", err);
+  }
 };
-const loginUser = (req, res) => {
-  console.log(`🟡 LOG - : LOG IN`);
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const [isUserAlreadyPresent] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(email, usersTable.email ));
+    if (!isUserAlreadyPresent?.email) {
+      return res.status(400).send("User not found. Please sign up.");
+    }
+
+    const { _salt, hashedKeys } = getSaltAndHashFromString(password);
+
+    if (password === hashedKeys) {
+      return res.status(200).send("Signed in successfully");
+    }
+  } catch (err) {
+    console.error(`🔴🔴🔴 LOG - : ERROR`, err);
+    return res.status(400).send("SERVER ERROR: ", err);
+  }
   res.send("LOGGED IN");
 };
 
-module.exports = { signUpUser, loginUser };
+module.exports = { getAllUsers, signUpUser, loginUser };
