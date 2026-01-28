@@ -1,10 +1,14 @@
+require("dotenv").config();
+const { eq } = require("drizzle-orm");
+const jwt = require("jsonwebtoken");
 const db = require("../db");
 const { usersTable, sessionTable } = require("../db/schema");
-const { eq } = require("drizzle-orm");
 const { getSaltAndHashFromString } = require("../utilities/utilities");
 
-const getAllUsers = async (_, res) =>
-  res.send(await db.select().from(usersTable));
+const getAllUsers = async (req, res) => {
+  console.log(`🟡 LOG - req: GET ALL USERS `, req);
+  return res.send(await db.select().from(usersTable));
+};
 
 const signUpUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -51,16 +55,19 @@ const loginUser = async (req, res) => {
       return res.status(400).send("Wrong username or password.");
     }
 
-    const [session] = await db
-      .insert(sessionTable)
-      .values({
-        userId: existingUser.id,
-      })
-      .returning({ id: sessionTable.id });
+    const jwtPayload = {
+      id: existingUser.id,
+      name: existingUser.name,
+      email: existingUser.email,
+    };
+
+    const jwtToken = jwt.sign(jwtPayload, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     return res
       .status(200)
-      .send({ message: "Signed in successfully", session: session.id });
+      .send({ message: "Signed in successfully", token: jwtToken });
   } catch (err) {
     console.error(`🔴🔴🔴 LOG - : ERROR`, err);
     return res.status(400).send("SERVER ERROR: ", err);

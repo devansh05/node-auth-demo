@@ -1,3 +1,3 @@
-const { sessionAuthenticator } = require("./session-authenticator");
+const { sessionAuthenticator, jwtAuthenticator } = require("./authenticators");
 
-module.exports = { sessionAuthenticator };
+module.exports = { sessionAuthenticator, jwtAuthenticator };

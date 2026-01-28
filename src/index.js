@@ -1,14 +1,16 @@
 require("dotenv").config();
 const express = require("express");
 const { userRouter } = require("./routes");
-const { sessionAuthenticator } = require("./middlewares");
+const { jwtAuthenticator } = require("./middlewares");
 
 const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
 
-app.use(sessionAuthenticator);
+// app.use(sessionAuthenticator);
+
+app.use(jwtAuthenticator);
 
 app.use("/users", userRouter);
 
