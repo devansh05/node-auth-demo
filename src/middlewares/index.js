@@ -1,3 +1,9 @@
 const { sessionAuthenticator, jwtAuthenticator } = require("./authenticators");
-
-module.exports = { sessionAuthenticator, jwtAuthenticator };
+const { ensureAuthenticated } = require("./ensureAuthenticated");
+const { restrictToRole } = require("./restrictToRole");
+module.exports = {
+  ensureAuthenticated,
+  sessionAuthenticator,
+  jwtAuthenticator,
+  restrictToRole
+};

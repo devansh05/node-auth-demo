@@ -80,10 +80,10 @@ const loginUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { email } = req.body;
-    const loggedInUser = req.user;
-    if (loggedInUser.role !== "admin") {
-      throw new Error("Logged in user, doesnot have required permissions.");
-    }
+    // const loggedInUser = req.user;
+    // if (loggedInUser.role !== "admin") {
+    //   throw new Error("Logged in user, doesnot have required permissions.");
+    // }
 
     const [userToDelete] = await db
       .select()
