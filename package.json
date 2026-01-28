@@ -4,9 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch ./src/index",
-    "dz-push": "npx drizzle-kit",
-    "dz-studio": "npx drizzle-kit studio"
+    "start": "node --watch ./src/index"
   },
   "keywords": [],
   "author": "",

@@ -1,5 +1,5 @@
 const db = require("../db");
-const { usersTable } = require("../db/schema");
+const { usersTable, sessionTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 const { getSaltAndHashFromString } = require("../utilities/utilities");
 
@@ -50,7 +50,17 @@ const loginUser = async (req, res) => {
     if (existingUser?.password !== hashedKeys) {
       return res.status(400).send("Wrong username or password.");
     }
-    return res.status(200).send("Signed in successfully");
+
+    const [session] = await db
+      .insert(sessionTable)
+      .values({
+        userId: existingUser.id,
+      })
+      .returning({ id: sessionTable.id });
+
+    return res
+      .status(200)
+      .send({ message: "Signed in successfully", session: session.id });
   } catch (err) {
     console.error(`🔴🔴🔴 LOG - : ERROR`, err);
     return res.status(400).send("SERVER ERROR: ", err);
