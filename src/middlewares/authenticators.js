@@ -27,9 +27,14 @@ async function sessionAuthenticator(req, res, next) {
 
 async function jwtAuthenticator(req, res, next) {
   try {
-    console.log(`🟡 LOG - req.headers: `, req.headers);
+    const isPublicRoute =
+      "/users/login" === req.path || "/users/signup" === req.path;
+
+    if (isPublicRoute) {
+      return next();
+    }
+
     const tokenHeader = req.headers["authorization"];
-    console.log(`🟡 LOG - tokenHeader: `, tokenHeader);
     // Header authorization : Bearer <token>
     if (!tokenHeader) {
       throw new Error("No bearer token available.");
@@ -40,13 +45,10 @@ async function jwtAuthenticator(req, res, next) {
     }
 
     const token = tokenHeader.split(" ")[1];
-    console.log(`🟡 LOG - token: `, token);
 
     const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(`🟡 LOG - decodedData: `, decodedData);
 
     req.user = decodedData;
-    console.log(`🟡 LOG - req 1 : `, req);
     next();
   } catch (err) {
     return res.status(401).send(err);
